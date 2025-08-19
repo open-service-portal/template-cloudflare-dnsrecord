@@ -27,7 +27,10 @@ spec:
         environmentConfigs:
         - type: Reference
           ref:
-            name: dns-config  # Contains zone and cloudflare_zone_id
+            name: dns-config  # Contains base zone
+        - type: Reference
+          ref:
+            name: cloudflare-config  # Contains cloudflare_zone_id
   
   # Step 2: Create Cloudflare DNS record using go-templating
   - step: create-dns-record

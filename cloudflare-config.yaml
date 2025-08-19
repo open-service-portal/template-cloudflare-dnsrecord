@@ -1,0 +1,24 @@
+# Cloudflare-specific Environment Configuration
+# This extends the dns-config with Cloudflare-specific settings
+#
+# To find your Zone ID:
+# 1. Log into Cloudflare Dashboard
+# 2. Select your domain
+# 3. On the right sidebar, find "Zone ID"
+# 4. Copy and paste it here
+#
+# Apply this after installing the template:
+# kubectl apply -f cloudflare-config.yaml
+---
+apiVersion: apiextensions.crossplane.io/v1beta1
+kind: EnvironmentConfig
+metadata:
+  name: cloudflare-config
+  annotations:
+    description: "Cloudflare-specific configuration"
+data:
+  # Get this from Cloudflare dashboard for your domain
+  cloudflare_zone_id: "YOUR_ZONE_ID_HERE"
+  
+  # Optional: If you want to override the zone from dns-config
+  # zone: "openportal.dev"

@@ -9,27 +9,49 @@ This template provides real DNS record creation in Cloudflare, moving beyond the
 ## Prerequisites
 
 1. **provider-cloudflare** installed
-2. **Cloudflare API Token** with Zone:Edit permissions
+2. **Cloudflare API Token** with Zone:DNS:Edit permissions
 3. **Zone ID** from Cloudflare dashboard
 4. **dns-config** EnvironmentConfig (provides zone name)
 
 ## Installation
 
-### 1. Install Provider
+### 1. Get Cloudflare Credentials
+
+1. Go to https://dash.cloudflare.com/profile/api-tokens
+2. Create Token → Use "Edit zone DNS" template
+3. Set permissions: `Zone:DNS:Edit` for your specific zone
+4. Copy the generated token
+
+### 2. Find Your Zone ID
+
+1. Log into Cloudflare Dashboard
+2. Select your domain (e.g., openportal.dev)
+3. On the right sidebar, find "Zone ID"
+4. Copy the Zone ID
+
+### 3. Install Provider
 
 ```bash
+# Install the provider
 kubectl apply -f scripts/cluster-manifests/crossplane-provider-cloudflare.yaml
+
+# Create the credentials secret
+kubectl create secret generic cloudflare-credentials \
+  --from-literal=credentials='{"api_token":"YOUR_TOKEN_HERE"}' \
+  -n crossplane-system
 ```
 
-### 2. Configure Credentials
+### 4. Configure Zone ID
 
 ```bash
-# Get your API token from Cloudflare dashboard
-# Update the secret with your token
-kubectl edit secret cloudflare-credentials -n crossplane-system
+# Edit cloudflare-config.yaml with your Zone ID
+vim cloudflare-config.yaml
+
+# Apply the configuration
+kubectl apply -f cloudflare-config.yaml
 ```
 
-### 3. Install Template
+### 5. Install Template
 
 ```bash
 kubectl apply -k .
