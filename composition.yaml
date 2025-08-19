@@ -1,0 +1,114 @@
+# Cloudflare DNS Record Composition
+# Purpose: Implements CloudflareDNSRecord using provider-cloudflare
+# Restaurant Analogy: The "recipe" that tells the kitchen how to create real DNS records
+apiVersion: apiextensions.crossplane.io/v1
+kind: Composition
+metadata:
+  name: cloudflarednsrecord
+  labels:
+    provider: cloudflare
+    type: dns-record
+spec:
+  compositeTypeRef:
+    apiVersion: platform.io/v1alpha1
+    kind: CloudflareDNSRecord
+  
+  mode: Pipeline
+  pipeline:
+  
+  # Step 1: Load environment configuration for zone info
+  - step: load-environment
+    functionRef:
+      name: function-environment-configs
+    input:
+      apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
+      kind: Input
+      spec:
+        environmentConfigs:
+        - type: Reference
+          ref:
+            name: dns-config  # Contains zone and cloudflare_zone_id
+  
+  # Step 2: Create Cloudflare DNS record using go-templating
+  - step: create-dns-record
+    functionRef:
+      name: function-go-templating
+    input:
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+          {{- $name := .observed.composite.resource.spec.name }}
+          {{- $type := .observed.composite.resource.spec.type }}
+          {{- $value := .observed.composite.resource.spec.value }}
+          {{- $ttl := .observed.composite.resource.spec.ttl | default 1 }}
+          {{- $proxied := .observed.composite.resource.spec.proxied | default false }}
+          {{- $priority := .observed.composite.resource.spec.priority }}
+          {{- $comment := .observed.composite.resource.spec.comment }}
+          {{- $xrName := .observed.composite.resource.metadata.name }}
+          
+          {{/* Get zone info from environment config */}}
+          {{- $zone := index .context "apiextensions.crossplane.io/environment" "zone" }}
+          {{- $zoneId := index .context "apiextensions.crossplane.io/environment" "cloudflare_zone_id" }}
+          
+          {{/* Construct FQDN */}}
+          {{- $fqdn := printf "%s.%s" $name $zone }}
+          {{- if eq $name "@" }}
+            {{- $fqdn = $zone }}
+          {{- end }}
+          
+          ---
+          # Cloudflare DNS Record
+          apiVersion: cloudflare.upbound.io/v1alpha1
+          kind: Record
+          metadata:
+            name: {{ $xrName }}
+            annotations:
+              gotemplating.fn.crossplane.io/composition-resource-name: {{ $xrName }}-record
+              crossplane.io/external-name: {{ $xrName }}
+          spec:
+            forProvider:
+              name: {{ $fqdn }}
+              type: {{ $type }}
+              value: {{ $value }}
+              zoneId: {{ $zoneId | quote }}
+              ttl: {{ $ttl }}
+              {{- if or (eq $type "A") (eq $type "AAAA") (eq $type "CNAME") }}
+              proxied: {{ $proxied }}
+              {{- end }}
+              {{- if $priority }}
+              priority: {{ $priority }}
+              {{- end }}
+              {{- if $comment }}
+              comment: {{ $comment | quote }}
+              {{- end }}
+            providerConfigRef:
+              name: cloudflare-provider
+  
+  # Step 3: Update status with FQDN and record info
+  - step: update-status
+    functionRef:
+      name: function-go-templating
+    input:
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+          {{- $name := .observed.composite.resource.spec.name }}
+          {{- $zone := index .context "apiextensions.crossplane.io/environment" "zone" }}
+          {{- $fqdn := printf "%s.%s" $name $zone }}
+          {{- if eq $name "@" }}
+            {{- $fqdn = $zone }}
+          {{- end }}
+          
+          apiVersion: platform.io/v1alpha1
+          kind: CloudflareDNSRecord
+          status:
+            fqdn: {{ $fqdn }}
+  
+  # Step 4: Mark as ready when record is created
+  - step: auto-ready
+    functionRef:
+      name: function-auto-ready

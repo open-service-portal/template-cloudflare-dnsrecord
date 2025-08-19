@@ -1,0 +1,12 @@
+# Example: Create a CNAME record in Cloudflare
+apiVersion: platform.io/v1alpha1
+kind: CloudflareDNSRecord
+metadata:
+  name: www-dns
+  namespace: default
+spec:
+  type: CNAME
+  name: www
+  value: "openportal.dev"  # Points to root domain
+  ttl: 1                   # Automatic TTL
+  proxied: true

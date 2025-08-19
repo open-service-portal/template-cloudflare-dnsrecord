@@ -1,0 +1,83 @@
+# CloudflareDNSRecord XRD
+# Purpose: Define API for managing real DNS records in Cloudflare
+# Restaurant Analogy: The "menu" for DNS record orders that will be fulfilled by Cloudflare
+apiVersion: apiextensions.crossplane.io/v1
+kind: CompositeResourceDefinition
+metadata:
+  name: cloudflarednsrecords.platform.io
+  annotations:
+    crossplane.io/version: "v2.0"
+    description: "Manage real DNS records in Cloudflare"
+spec:
+  group: platform.io
+  names:
+    kind: CloudflareDNSRecord
+    plural: cloudflarednsrecords
+  defaultCompositionRef:
+    name: cloudflarednsrecord
+  versions:
+  - name: v1alpha1
+    served: true
+    referenceable: true
+    schema:
+      openAPIV3Schema:
+        type: object
+        properties:
+          spec:
+            type: object
+            required:
+              - type
+              - name
+              - value
+            properties:
+              type:
+                type: string
+                description: "DNS record type"
+                enum:
+                  - A
+                  - AAAA
+                  - CNAME
+                  - TXT
+                  - MX
+                  - NS
+                  - SRV
+              name:
+                type: string
+                description: "DNS record name (subdomain or @ for root)"
+                pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?(@)?$'
+                minLength: 1
+                maxLength: 63
+              value:
+                type: string
+                description: "DNS record value (IP, hostname, or text)"
+              ttl:
+                type: integer
+                description: "Time to live in seconds (1 = automatic)"
+                default: 1
+                minimum: 1
+                maximum: 86400
+              proxied:
+                type: boolean
+                description: "Whether to use Cloudflare proxy (orange cloud)"
+                default: false
+              priority:
+                type: integer
+                description: "Priority for MX and SRV records"
+                minimum: 0
+                maximum: 65535
+              comment:
+                type: string
+                description: "Optional comment for the DNS record"
+                maxLength: 100
+          status:
+            type: object
+            properties:
+              fqdn:
+                type: string
+                description: "Fully qualified domain name"
+              recordId:
+                type: string
+                description: "Cloudflare record ID"
+              ready:
+                type: boolean
+                description: "Whether the record is ready"

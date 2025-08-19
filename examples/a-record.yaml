@@ -1,0 +1,12 @@
+# Example: Create an A record in Cloudflare
+apiVersion: platform.io/v1alpha1
+kind: CloudflareDNSRecord
+metadata:
+  name: myapp-dns
+  namespace: default
+spec:
+  type: A
+  name: myapp          # Creates myapp.openportal.dev
+  value: "50.56.157.82" # Your server IP
+  ttl: 300
+  proxied: true         # Enable Cloudflare proxy (orange cloud)
