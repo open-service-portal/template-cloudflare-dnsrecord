@@ -1,7 +1,7 @@
 # Cloudflare DNS Record Composition
 # Purpose: Implements CloudflareDNSRecord using provider-cloudflare
 # Restaurant Analogy: The "recipe" that tells the kitchen how to create real DNS records
-apiVersion: apiextensions.crossplane.io/v2
+apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
   name: cloudflarednsrecord
