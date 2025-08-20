@@ -48,12 +48,11 @@ spec:
           {{- $ttl := .observed.composite.resource.spec.ttl | default 1 }}
           {{- $proxied := .observed.composite.resource.spec.proxied | default false }}
           {{- $priority := .observed.composite.resource.spec.priority }}
-          {{- $comment := .observed.composite.resource.spec.comment }}
           {{- $xrName := .observed.composite.resource.metadata.name }}
           
           {{/* Get zone info from environment config */}}
           {{- $zone := index .context "apiextensions.crossplane.io/environment" "zone" }}
-          {{- $zoneId := index .context "apiextensions.crossplane.io/environment" "cloudflare_zone_id" }}
+          {{- $zoneId := index .context "apiextensions.crossplane.io/environment" "zone_id" }}
           
           {{/* Construct FQDN */}}
           {{- $fqdn := printf "%s.%s" $name $zone }}
@@ -63,7 +62,7 @@ spec:
           
           ---
           # Cloudflare DNS Record
-          apiVersion: cloudflare.upbound.io/v1alpha1
+          apiVersion: dns.cloudflare.upbound.io/v1alpha1
           kind: Record
           metadata:
             name: {{ $xrName }}
@@ -82,9 +81,6 @@ spec:
               {{- end }}
               {{- if $priority }}
               priority: {{ $priority }}
-              {{- end }}
-              {{- if $comment }}
-              comment: {{ $comment | quote }}
               {{- end }}
             providerConfigRef:
               name: cloudflare-provider
