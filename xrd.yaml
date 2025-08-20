@@ -34,6 +34,8 @@ spec:
   names:
     kind: CloudflareDNSRecord
     plural: cloudflarednsrecords
+    singular: cloudflarednsrecord
+    listKind: CloudflareDNSRecordList
   defaultCompositionRef:
     name: cloudflarednsrecord
   versions:
