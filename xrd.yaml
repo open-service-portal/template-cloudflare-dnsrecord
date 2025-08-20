@@ -5,6 +5,8 @@ apiVersion: apiextensions.crossplane.io/v1
 kind: CompositeResourceDefinition
 metadata:
   name: cloudflarednsrecords.platform.io
+  labels:
+    terasky.backstage.io/generate-form: "true"
   annotations:
     crossplane.io/version: "v2.0"
     description: "Manage real DNS records in Cloudflare"
