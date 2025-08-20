@@ -18,6 +18,8 @@ metadata:
     # Form behavior hints
     terasky.backstage.io/composition-strategy: 'direct'
     terasky.backstage.io/default-composition: 'cloudflarednsrecord'
+    terasky.backstage.io/skip-publish-step: 'true'
+    terasky.backstage.io/auto-apply: 'true'
 spec:
   scope: Namespaced  # Crossplane v2 - XRs can be created in any namespace
   group: platform.io
@@ -93,8 +95,7 @@ spec:
                 type: string
                 description: "Cloudflare Zone resource (leave default for openportal.dev domain)"
                 default: "openportal-zone"
-                enum:
-                  - "openportal-zone"
+                # Remove enum to avoid duplication - just use default
                 # To add more zones: kubectl get zones.zone.cloudflare.upbound.io
                 # Each Zone resource represents a domain you can create records in
           status:
