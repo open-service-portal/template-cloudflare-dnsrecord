@@ -69,6 +69,15 @@ spec:
                 type: string
                 description: "Optional comment for the DNS record"
                 maxLength: 100
+              zone:
+                type: string
+                description: "The zone resource to use for this DNS record"
+                default: "openportal-zone"
+                enum:
+                  - "openportal-zone"  # openportal.dev
+                # Add more zones here as they are imported
+                # - "example-com-zone"  # example.com
+                # - "staging-zone"      # staging.example.com
           status:
             type: object
             properties:

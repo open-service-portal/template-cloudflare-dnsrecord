@@ -49,10 +49,10 @@ spec:
           {{- $proxied := .observed.composite.resource.spec.proxied | default false }}
           {{- $priority := .observed.composite.resource.spec.priority }}
           {{- $xrName := .observed.composite.resource.metadata.name }}
+          {{- $zoneRef := .observed.composite.resource.spec.zone | default "openportal-zone" }}
           
-          {{/* Get zone info from environment config */}}
+          {{/* Get zone info from environment config for FQDN construction */}}
           {{- $zone := index .context "apiextensions.crossplane.io/environment" "zone" }}
-          {{- $zoneId := index .context "apiextensions.crossplane.io/environment" "zone_id" }}
           
           {{/* Construct FQDN */}}
           {{- $fqdn := printf "%s.%s" $name $zone }}
@@ -73,7 +73,8 @@ spec:
               name: {{ $name }}
               type: {{ $type }}
               value: {{ $value }}
-              zoneId: {{ $zoneId | quote }}
+              zoneIdRef:
+                name: {{ $zoneRef }}
               ttl: {{ $ttl }}
               {{- if or (eq $type "A") (eq $type "AAAA") (eq $type "CNAME") }}
               proxied: {{ $proxied }}
