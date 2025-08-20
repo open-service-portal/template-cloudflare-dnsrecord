@@ -1,0 +1,49 @@
+# Example: CloudflareDNSRecord with Zone Selection
+# This example shows how to create DNS records in different zones
+
+# First, list available zones:
+# kubectl get zones.zone.cloudflare.upbound.io
+# NAME              READY   SYNCED   EXTERNAL-NAME
+# openportal-zone   True    True     8ee05851047e034cb075dc1d24535b93
+# staging-zone      True    True     abc123...
+
+---
+# Example 1: Create record in default zone (openportal-zone)
+apiVersion: platform.io/v1alpha1
+kind: CloudflareDNSRecord
+metadata:
+  name: app-default-zone
+spec:
+  type: A
+  name: myapp
+  value: "192.168.1.100"
+  ttl: 300
+  proxied: true
+  # zone parameter is optional, defaults to "openportal-zone"
+
+---
+# Example 2: Create record in a specific zone
+apiVersion: platform.io/v1alpha1
+kind: CloudflareDNSRecord
+metadata:
+  name: app-staging-zone
+spec:
+  type: A
+  name: myapp
+  value: "192.168.1.101"
+  ttl: 300
+  proxied: false
+  zone: "staging-zone"  # Specify different zone
+
+---
+# Example 3: Create record with zone reference
+apiVersion: platform.io/v1alpha1
+kind: CloudflareDNSRecord
+metadata:
+  name: api-endpoint
+spec:
+  type: CNAME
+  name: api
+  value: "api-gateway.example.com"
+  ttl: 3600
+  zone: "production-zone"  # Must match an existing Zone resource name

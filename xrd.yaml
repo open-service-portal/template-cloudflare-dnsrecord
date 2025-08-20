@@ -71,13 +71,10 @@ spec:
                 maxLength: 100
               zone:
                 type: string
-                description: "The zone resource to use for this DNS record"
+                description: "The Zone resource name to use (run: kubectl get zones.zone.cloudflare.upbound.io to list available zones)"
                 default: "openportal-zone"
-                enum:
-                  - "openportal-zone"  # openportal.dev
-                # Add more zones here as they are imported
-                # - "example-com-zone"  # example.com
-                # - "staging-zone"      # staging.example.com
+                # To list available zones: kubectl get zones.zone.cloudflare.upbound.io
+                # Each Zone resource represents a domain you can create records in
           status:
             type: object
             properties:
