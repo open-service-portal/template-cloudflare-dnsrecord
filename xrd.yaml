@@ -1,7 +1,7 @@
 # CloudflareDNSRecord XRD
 # Purpose: Define API for managing real DNS records in Cloudflare
 # Restaurant Analogy: The "menu" for DNS record orders that will be fulfilled by Cloudflare
-apiVersion: apiextensions.crossplane.io/v1
+apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
   name: cloudflarednsrecords.platform.io
@@ -11,6 +11,7 @@ metadata:
     crossplane.io/version: "v2.0"
     description: "Manage real DNS records in Cloudflare"
 spec:
+  scope: Namespaced
   group: platform.io
   names:
     kind: CloudflareDNSRecord
