@@ -15,6 +15,9 @@ metadata:
     terasky.backstage.io/system: 'infrastructure-templates'
     terasky.backstage.io/component-type: 'crossplane-template'
     terasky.backstage.io/lifecycle: 'production'
+    # Form behavior hints
+    terasky.backstage.io/composition-strategy: 'direct'
+    terasky.backstage.io/default-composition: 'cloudflarednsrecord'
 spec:
   scope: Namespaced  # Crossplane v2 - XRs can be created in any namespace
   group: platform.io
@@ -51,13 +54,22 @@ spec:
                   - SRV
               name:
                 type: string
-                description: "DNS record name (subdomain or @ for root)"
+                description: "Subdomain name (e.g., 'api' creates api.yourdomain.com, use '@' for root domain)"
                 pattern: '^[a-z0-9]([-a-z0-9]*[a-z0-9])?(@)?$'
                 minLength: 1
                 maxLength: 63
+                examples:
+                  - "api"
+                  - "www"
+                  - "staging"
+                  - "@"
               value:
                 type: string
-                description: "DNS record value (IP, hostname, or text)"
+                description: "Target value: IPv4 for A, IPv6 for AAAA, hostname for CNAME, text for TXT"
+                examples:
+                  - "192.168.1.100"
+                  - "2001:db8::1"
+                  - "target.example.com"
               ttl:
                 type: integer
                 description: "Time to live in seconds (1 = automatic)"
@@ -79,9 +91,11 @@ spec:
                 maxLength: 100
               zone:
                 type: string
-                description: "The Zone resource name to use (run: kubectl get zones.zone.cloudflare.upbound.io to list available zones)"
+                description: "Cloudflare Zone resource (leave default for openportal.dev domain)"
                 default: "openportal-zone"
-                # To list available zones: kubectl get zones.zone.cloudflare.upbound.io
+                enum:
+                  - "openportal-zone"
+                # To add more zones: kubectl get zones.zone.cloudflare.upbound.io
                 # Each Zone resource represents a domain you can create records in
           status:
             type: object
