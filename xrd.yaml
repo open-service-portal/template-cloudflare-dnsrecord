@@ -10,8 +10,13 @@ metadata:
   annotations:
     crossplane.io/version: "v2.0"
     description: "Manage real DNS records in Cloudflare"
+    terasky.backstage.io/add-to-catalog: 'true'
+    terasky.backstage.io/owner: 'platform-team'
+    terasky.backstage.io/system: 'infrastructure-templates'
+    terasky.backstage.io/component-type: 'crossplane-template'
+    terasky.backstage.io/lifecycle: 'production'
 spec:
-  scope: Namespaced
+  scope: Namespaced  # Crossplane v2 - XRs can be created in any namespace
   group: platform.io
   names:
     kind: CloudflareDNSRecord
