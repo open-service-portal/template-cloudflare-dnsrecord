@@ -15,6 +15,7 @@ metadata:
     terasky.backstage.io/lifecycle: 'production'
 spec:
   group: platform.io
+  scope: Namespaced  # Crossplane v2 - XRs can be created in any namespace
   names:
     kind: CloudflareDNSRecord
     plural: cloudflarednsrecords
