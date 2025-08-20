@@ -68,10 +68,9 @@ spec:
             name: {{ $xrName }}
             annotations:
               gotemplating.fn.crossplane.io/composition-resource-name: {{ $xrName }}-record
-              crossplane.io/external-name: {{ $xrName }}
           spec:
             forProvider:
-              name: {{ $fqdn }}
+              name: {{ $name }}
               type: {{ $type }}
               value: {{ $value }}
               zoneId: {{ $zoneId | quote }}
