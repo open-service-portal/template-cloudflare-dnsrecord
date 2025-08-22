@@ -16,6 +16,7 @@ metadata:
     backstage.io/version: "1.0.2"
     backstage.io/description: "Create and manage DNS records in Cloudflare with automatic zone configuration"
     backstage.io/source-location: "url:https://github.com/open-service-portal/template-cloudflare-dnsrecord"
+    github.com/project-slug: "open-service-portal/template-cloudflare-dnsrecord"
     # Version as a tag for visibility
     terasky.backstage.io/tags: "v1.0.2,dns,cloudflare"
     # Terasky specific
