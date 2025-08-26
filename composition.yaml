@@ -10,7 +10,7 @@ metadata:
     type: dns-record
 spec:
   compositeTypeRef:
-    apiVersion: platform.io/v1alpha1
+    apiVersion: openportal.dev/v1alpha1
     kind: CloudflareDNSRecord
   
   mode: Pipeline
@@ -102,7 +102,7 @@ spec:
             {{- $fqdn = $zone }}
           {{- end }}
           
-          apiVersion: platform.io/v1alpha1
+          apiVersion: openportal.dev/v1alpha1
           kind: CloudflareDNSRecord
           status:
             fqdn: {{ $fqdn }}

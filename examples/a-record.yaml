@@ -1,5 +1,5 @@
 # Example: Create an A record in Cloudflare
-apiVersion: platform.io/v1alpha1
+apiVersion: openportal.dev/v1alpha1
 kind: CloudflareDNSRecord
 metadata:
   name: myapp-dns

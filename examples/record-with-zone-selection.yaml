@@ -9,7 +9,7 @@
 
 ---
 # Example 1: Create record in default zone (openportal-zone)
-apiVersion: platform.io/v1alpha1
+apiVersion: openportal.dev/v1alpha1
 kind: CloudflareDNSRecord
 metadata:
   name: app-default-zone
@@ -23,7 +23,7 @@ spec:
 
 ---
 # Example 2: Create record in a specific zone
-apiVersion: platform.io/v1alpha1
+apiVersion: openportal.dev/v1alpha1
 kind: CloudflareDNSRecord
 metadata:
   name: app-staging-zone
@@ -37,7 +37,7 @@ spec:
 
 ---
 # Example 3: Create record with zone reference
-apiVersion: platform.io/v1alpha1
+apiVersion: openportal.dev/v1alpha1
 kind: CloudflareDNSRecord
 metadata:
   name: api-endpoint
