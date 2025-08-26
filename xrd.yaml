@@ -4,7 +4,7 @@
 apiVersion: apiextensions.crossplane.io/v2
 kind: CompositeResourceDefinition
 metadata:
-  name: cloudflarednsrecords.platform.io
+  name: cloudflarednsrecords.openportal.dev
   labels:
     terasky.backstage.io/generate-form: "true"
     version: "v1.0.2"
@@ -30,7 +30,7 @@ metadata:
     terasky.backstage.io/auto-apply: 'true'
 spec:
   scope: Namespaced  # Crossplane v2 - XRs can be created in any namespace
-  group: platform.io
+  group: openportal.dev
   names:
     kind: CloudflareDNSRecord
     plural: cloudflarednsrecords
