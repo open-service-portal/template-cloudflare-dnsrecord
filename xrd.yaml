@@ -8,11 +8,10 @@ metadata:
   labels:
     terasky.backstage.io/generate-form: "true"
     version: "v1.0.2"
-    openportal.dev/tag-dns: "true"
-    openportal.dev/tag-cloudflare: "true"
   annotations:
     crossplane.io/version: "v2.0"
     description: "Manage real DNS records in Cloudflare"
+    openportal.dev/tags: "dns,cloudflare"
     # Backstage catalog metadata
     backstage.io/title: "Cloudflare DNS Record v1.0.2"
     backstage.io/version: "1.0.2"
