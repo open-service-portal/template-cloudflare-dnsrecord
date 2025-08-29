@@ -1,0 +1,20 @@
+---
+# Crossplane Configuration Package metadata
+# This file defines how the package is built and published
+apiVersion: meta.pkg.crossplane.io/v1
+kind: Configuration
+metadata:
+  name: configuration-cloudflare-dnsrecord
+  labels:
+    provider: cloudflare
+    type: dns-management
+    openportal.dev/template: "true"
+spec:
+  # Crossplane version compatibility
+  crossplane:
+    version: ">=v2.0.0"
+  
+  # Dependencies - provider requirements
+  dependsOn:
+    - provider: xpkg.upbound.io/upbound/provider-cloudflare
+      version: ">=v1.0.0"
