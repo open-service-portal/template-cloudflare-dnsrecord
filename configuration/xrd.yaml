@@ -7,19 +7,16 @@ metadata:
   name: cloudflarednsrecords.openportal.dev
   labels:
     terasky.backstage.io/generate-form: "true"
-    openportal.dev/version: "v1.0.0"
   annotations:
     crossplane.io/version: "v2.0"
     description: "Manage real DNS records in Cloudflare"
     openportal.dev/tags: "dns,cloudflare"
     # Backstage catalog metadata
-    backstage.io/title: "Cloudflare DNS Record v1.0.2"
-    backstage.io/version: "1.0.2"
+    backstage.io/title: "Cloudflare DNS Record"
     backstage.io/description: "Create and manage DNS records in Cloudflare with automatic zone configuration"
     backstage.io/source-location: "url:https://github.com/open-service-portal/template-cloudflare-dnsrecord"
     github.com/project-slug: "open-service-portal/template-cloudflare-dnsrecord"
-    # Version as a tag for visibility
-    terasky.backstage.io/tags: "v1.0.2,dns,cloudflare"
+    terasky.backstage.io/tags: "dns,cloudflare"
     # Terasky specific
     terasky.backstage.io/add-to-catalog: 'true'
     terasky.backstage.io/owner: 'platform-team'
