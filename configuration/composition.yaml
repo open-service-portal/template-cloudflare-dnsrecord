@@ -120,7 +120,6 @@ spec:
           kind: CloudflareDNSRecord
           status:
             fqdn: {{ $fqdn }}
-            provider: external-dns
   
   # Step 4: Mark as ready when DNSEndpoint is created
   - step: auto-ready
