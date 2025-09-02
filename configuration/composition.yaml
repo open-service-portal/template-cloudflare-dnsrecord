@@ -1,12 +1,12 @@
 # Cloudflare DNS Record Composition
-# Purpose: Implements CloudflareDNSRecord using provider-cloudflare
-# Restaurant Analogy: The "recipe" that tells the kitchen how to create real DNS records
+# Purpose: Implements CloudflareDNSRecord using External-DNS via DNSEndpoint
+# Restaurant Analogy: The "recipe" that tells External-DNS what DNS records to create
 apiVersion: apiextensions.crossplane.io/v1
 kind: Composition
 metadata:
   name: cloudflarednsrecord
   labels:
-    provider: cloudflare
+    provider: external-dns
     type: dns-record
 spec:
   compositeTypeRef:
@@ -16,24 +16,25 @@ spec:
   mode: Pipeline
   pipeline:
   
-  # Step 1: Load environment configuration for zone info
-  - step: load-environment
+  # Step 1: Set default zone via go-templating
+  - step: set-defaults
     functionRef:
-      name: function-environment-configs
+      name: function-go-templating
     input:
-      apiVersion: environmentconfigs.fn.crossplane.io/v1beta1
-      kind: Input
-      spec:
-        environmentConfigs:
-        - type: Reference
-          ref:
-            name: dns-config  # Contains base zone
-        - type: Reference
-          ref:
-            name: cloudflare-config  # Contains cloudflare_zone_id
+      apiVersion: gotemplating.fn.crossplane.io/v1beta1
+      kind: GoTemplate
+      source: Inline
+      inline:
+        template: |
+          {{/* Set default zone if not provided */}}
+          apiVersion: openportal.dev/v1alpha1
+          kind: CloudflareDNSRecord
+          metadata:
+            annotations:
+              default-zone: "openportal.dev"
   
-  # Step 2: Create Cloudflare DNS record using go-templating
-  - step: create-dns-record
+  # Step 2: Create DNSEndpoint for External-DNS using go-templating
+  - step: create-dns-endpoint
     functionRef:
       name: function-go-templating
     input:
@@ -48,11 +49,12 @@ spec:
           {{- $ttl := .observed.composite.resource.spec.ttl | default 1 }}
           {{- $proxied := .observed.composite.resource.spec.proxied | default false }}
           {{- $priority := .observed.composite.resource.spec.priority }}
+          {{- $comment := .observed.composite.resource.spec.comment }}
           {{- $xrName := .observed.composite.resource.metadata.name }}
-          {{- $zoneRef := .observed.composite.resource.spec.zone | default "openportal-zone" }}
+          {{- $namespace := .observed.composite.resource.metadata.namespace | default "default" }}
           
-          {{/* Get zone info from environment config for FQDN construction */}}
-          {{- $zone := index .context "apiextensions.crossplane.io/environment" "zone" }}
+          {{/* Use default zone for now - can be made configurable later */}}
+          {{- $zone := "openportal.dev" }}
           
           {{/* Construct FQDN */}}
           {{- $fqdn := printf "%s.%s" $name $zone }}
@@ -61,31 +63,43 @@ spec:
           {{- end }}
           
           ---
-          # Cloudflare DNS Record
-          apiVersion: dns.cloudflare.upbound.io/v1alpha1
-          kind: Record
+          # DNSEndpoint for External-DNS
+          apiVersion: externaldns.openportal.dev/v1alpha1
+          kind: DNSEndpoint
           metadata:
             name: {{ $xrName }}
+            namespace: {{ $namespace }}
             annotations:
-              gotemplating.fn.crossplane.io/composition-resource-name: {{ $xrName }}-record
+              gotemplating.fn.crossplane.io/composition-resource-name: {{ $xrName }}-endpoint
+              {{- if $comment }}
+              dns-record-comment: {{ $comment | quote }}
+              {{- end }}
+              {{- if $proxied }}
+              cloudflare-proxied: "{{ $proxied }}"
+              {{- end }}
+            labels:
+              managed-by: crossplane
+              dns-type: {{ $type | lower }}
           spec:
-            forProvider:
-              name: {{ $name }}
-              type: {{ $type }}
-              value: {{ $value }}
-              zoneIdRef:
-                name: {{ $zoneRef }}
-              ttl: {{ $ttl }}
-              {{- if or (eq $type "A") (eq $type "AAAA") (eq $type "CNAME") }}
-              proxied: {{ $proxied }}
+            endpoints:
+            - dnsName: {{ $fqdn }}
+              recordType: {{ $type }}
+              {{- if ne $ttl 1 }}
+              recordTTL: {{ $ttl }}
               {{- end }}
+              targets:
+              - {{ $value | quote }}
               {{- if $priority }}
-              priority: {{ $priority }}
+              providerSpecific:
+              - name: priority
+                value: {{ $priority | quote }}
               {{- end }}
-            providerConfigRef:
-              name: cloudflare-provider
+              {{- if $proxied }}
+              - name: cloudflare-proxied
+                value: "{{ $proxied }}"
+              {{- end }}
   
-  # Step 3: Update status with FQDN and record info
+  # Step 3: Update status with FQDN and record info  
   - step: update-status
     functionRef:
       name: function-go-templating
@@ -96,7 +110,7 @@ spec:
       inline:
         template: |
           {{- $name := .observed.composite.resource.spec.name }}
-          {{- $zone := index .context "apiextensions.crossplane.io/environment" "zone" }}
+          {{- $zone := "openportal.dev" }}
           {{- $fqdn := printf "%s.%s" $name $zone }}
           {{- if eq $name "@" }}
             {{- $fqdn = $zone }}
@@ -106,8 +120,9 @@ spec:
           kind: CloudflareDNSRecord
           status:
             fqdn: {{ $fqdn }}
+            provider: external-dns
   
-  # Step 4: Mark as ready when record is created
+  # Step 4: Mark as ready when DNSEndpoint is created
   - step: auto-ready
     functionRef:
       name: function-auto-ready
