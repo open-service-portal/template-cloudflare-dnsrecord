@@ -1,57 +1,44 @@
 # CloudflareDNSRecord Crossplane Template
 
-Real DNS record management for Cloudflare using Crossplane.
+Real DNS record management for Cloudflare using External-DNS.
 
 ## Overview
 
-This template provides real DNS record creation in Cloudflare, moving beyond the mock ConfigMap approach to actual DNS management.
+This template provides real DNS record creation in Cloudflare via External-DNS, enabling namespaced DNS management without requiring cluster-scoped resources.
+
+## Migration from Provider-Based Approach
+
+**Previous:** Used Crossplane's provider-cloudflare which required cluster-scoped resources
+**Current:** Uses External-DNS with DNSEndpoint CRDs for namespace-isolated DNS management
 
 ## Prerequisites
 
-1. **provider-cloudflare** installed
-2. **Cloudflare API Token** with Zone:DNS:Edit permissions
-3. **Zone ID** from Cloudflare dashboard
-4. **dns-config** EnvironmentConfig (provides zone name)
+1. **External-DNS** installed and configured
+2. **Cloudflare API Token** configured in External-DNS
+3. **dns-config** EnvironmentConfig (provides zone name)
 
 ## Installation
 
-### 1. Get Cloudflare Credentials
-
-1. Go to https://dash.cloudflare.com/profile/api-tokens
-2. Create Token → Use "Edit zone DNS" template
-3. Set permissions: `Zone:DNS:Edit` for your specific zone
-4. Copy the generated token
-
-### 2. Find Your Zone ID
-
-1. Log into Cloudflare Dashboard
-2. Select your domain (e.g., openportal.dev)
-3. On the right sidebar, find "Zone ID"
-4. Copy the Zone ID
-
-### 3. Install Provider
+### 1. Ensure External-DNS is Running
 
 ```bash
-# Install the provider
-kubectl apply -f scripts/cluster-manifests/crossplane-provider-cloudflare.yaml
+# Check External-DNS status
+kubectl get deployment -n external-dns external-dns
 
-# Create the credentials secret
-kubectl create secret generic cloudflare-credentials \
-  --from-literal=credentials='{"api_token":"YOUR_TOKEN_HERE"}' \
-  -n crossplane-system
+# Verify DNSEndpoint CRD exists
+kubectl get crd dnsendpoints.externaldns.openportal.dev
 ```
 
-### 4. Configure Zone ID
+### 2. Configure DNS Zone
 
 ```bash
-# Edit cloudflare-config.yaml with your Zone ID
-vim cloudflare-config.yaml
+# Edit dns-config EnvironmentConfig with your zone
+kubectl edit environmentconfig dns-config
 
-# Apply the configuration
-kubectl apply -f cloudflare-config.yaml
+# Set the zone field (e.g., "openportal.dev")
 ```
 
-### 5. Install Template
+### 3. Install Template
 
 ```bash
 kubectl apply -k .
@@ -62,36 +49,60 @@ kubectl apply -k .
 ### Create A Record
 
 ```yaml
-apiVersion: platform.io/v1alpha1
+apiVersion: openportal.dev/v1alpha1
 kind: CloudflareDNSRecord
 metadata:
   name: myapp-dns
+  namespace: my-team
 spec:
   type: A
   name: myapp
   value: "50.56.157.82"
   proxied: true
+  comment: "My application DNS"
 ```
 
 ### Create CNAME
 
 ```yaml
-apiVersion: platform.io/v1alpha1
+apiVersion: openportal.dev/v1alpha1
 kind: CloudflareDNSRecord
 metadata:
   name: www-dns
+  namespace: my-team
 spec:
   type: CNAME
   name: www
   value: "openportal.dev"
 ```
 
+### Create MX Record
+
+```yaml
+apiVersion: openportal.dev/v1alpha1
+kind: CloudflareDNSRecord
+metadata:
+  name: mail-dns
+  namespace: my-team
+spec:
+  type: MX
+  name: "@"
+  value: "mail.openportal.dev"
+  priority: 10
+```
+
+## How It Works
+
+1. **You create** a CloudflareDNSRecord XR in your namespace
+2. **Crossplane Composition** transforms it into a DNSEndpoint resource
+3. **External-DNS** watches DNSEndpoint resources and syncs them to Cloudflare
+4. **Cloudflare** creates/updates the actual DNS records
+
 ## Configuration
 
 The template requires:
 - **dns-config** EnvironmentConfig with `zone` field
-- **cloudflare-credentials** Secret with API token
-- **cloudflare_zone_id** in the composition (currently hardcoded, TODO: make dynamic)
+- **External-DNS** with Cloudflare credentials configured
 
 ## Features
 
@@ -100,18 +111,69 @@ The template requires:
 - ✅ Cloudflare proxy (orange cloud) support
 - ✅ TTL management
 - ✅ Comment support for record documentation
+- ✅ **Namespace isolation** - teams manage their own DNS records
+- ✅ No cluster-scoped resources required
 
 ## Restaurant Analogy
 
 - **Menu (XRD)**: CloudflareDNSRecord - what DNS records can be ordered
-- **Recipe (Composition)**: How to create records using Cloudflare API
-- **Supplier (Provider)**: provider-cloudflare - connects to Cloudflare service
+- **Recipe (Composition)**: How to create DNSEndpoint resources
+- **Waiter (External-DNS)**: Takes DNSEndpoint orders to Cloudflare
 - **Order (XR)**: Your DNS record request
 - **Kitchen (Cloudflare)**: Where the actual DNS records are created
 
+## Architecture Benefits
+
+### Previous (Provider-Based)
+- Required cluster-scoped Cloudflare provider
+- Namespaced XRs couldn't create cluster-scoped resources
+- Limited multi-tenancy support
+
+### Current (External-DNS)
+- Namespaced DNSEndpoint resources
+- External-DNS handles provider interaction
+- Full namespace isolation for teams
+- Better security and multi-tenancy
+
+## Troubleshooting
+
+### DNS Record Not Created
+
+1. Check XR status:
+```bash
+kubectl get cloudflarednsrecord -n your-namespace
+kubectl describe cloudflarednsrecord <name> -n your-namespace
+```
+
+2. Check DNSEndpoint:
+```bash
+kubectl get dnsendpoint -n your-namespace
+kubectl describe dnsendpoint <name> -n your-namespace
+```
+
+3. Check External-DNS logs:
+```bash
+kubectl logs -n external-dns deployment/external-dns
+```
+
+### External-DNS Not Processing Records
+
+1. Verify External-DNS is running:
+```bash
+kubectl get pods -n external-dns
+```
+
+2. Check External-DNS configuration:
+```bash
+kubectl get deployment -n external-dns external-dns -o yaml | grep args -A 10
+```
+
+3. Ensure it's watching the correct CRD:
+- Should include: `--crd-source-apiversion=externaldns.openportal.dev/v1alpha1`
+
 ## TODO
 
-- [ ] Dynamic zone ID lookup from Cloudflare
-- [ ] Support for MX priority
 - [ ] Support for SRV records
 - [ ] Integration with WhoAmIApp for automatic DNS
+- [ ] Support for wildcard records
+- [ ] DNS record validation webhook
