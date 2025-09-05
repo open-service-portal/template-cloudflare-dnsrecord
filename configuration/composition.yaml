@@ -71,6 +71,7 @@ spec:
             namespace: {{ $namespace }}
             annotations:
               gotemplating.fn.crossplane.io/composition-resource-name: {{ $xrName }}-endpoint
+              gotemplating.fn.crossplane.io/ready: "True"
               {{- if $comment }}
               dns-record-comment: {{ $comment | quote }}
               {{- end }}
@@ -120,8 +121,3 @@ spec:
           kind: CloudflareDNSRecord
           status:
             fqdn: {{ $fqdn }}
-  
-  # Step 4: Mark as ready when DNSEndpoint is created
-  - step: auto-ready
-    functionRef:
-      name: function-auto-ready
